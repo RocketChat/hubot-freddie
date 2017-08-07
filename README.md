@@ -1,39 +1,85 @@
-# Federation 
+hubot-freddie
+=============
 
-Federation is now under active development.  The following is synopsis of the current activities.  
+Freddie is Rocket.Chat's Hubot for Federation via matrix.org
 
-## Hubot Freddie - the Federation bridge npm module for Rocket.Chat
+Freddie pairs a Rocket.Chat server with a Synapse Home Server.
 
-https://www.npmjs.com/package/hubot-freddie
+From Rocket.Chat:
 
-This is a working bot that can be added to any Rocket.Chat server and allows one channel to be federated with other similarly configured Rocket.Chat server.   It works by bridging a channel from a Rocket.Chat server to a Matrix.org synapse homeserver. 
+![Rocket.Chat in federated channel](https://raw.githubusercontent.com/Sing-Li/bbug/master/images/rcsnynapse.png)
 
-#### Federated by hubot freddie
+To Home Server:
 
-You can see hubot freddie in action on our community server:
+![Synapse in federated room](https://raw.githubusercontent.com/Sing-Li/bbug/master/images/synapserc.png)
 
-The #general channel of our community server https://demo.rocket.chat/channel/general
+Out to the rest of the federated world - Slack, IRC, and beyond ... via matrix.org
 
-is bridged via hubot freddie to this paired homeserver and room: 
+NOTE: This project is a work in progress.
 
-http://federation.rocket.chat/_matrix/client/#/room/!KgtAjQXVRcuoqmtfHC:federation.rocket.chat
+# Installation
 
-This room can be federated throughout the Matrix.org realm.  Any server in the realm can also be paired with another Rocket.Chat server via hubot freddie.
+```
+npm install --save hubot-freddie
+```
 
-#### Contributing
+Next, you must edit the `external-scripts.json` file to load Freddie:
 
-Ongoing development with hubot freddie is taking place here, contributions welcomed:
+```
+[
+  ...
+  "hubot-freddie"
+]
+```
 
-https://github.com/RocketChat/Rocket.Chat.Federation/tree/develop/matrix.org
+# Home Server Application Service Registration
 
-## Federation Server
+In the `node_modules/hubot-freddie` directory:
 
-The is our _native federation_ implementation.  It will enable Rocket.Chat to federate with other Rocket.Chat servers directly without bridges or intermdiary servers.  It will add matrix.org protocol compatibitily to Rocket.Chat.
+```
+npm install
+node src/matrix/genASRegFile.js -r -u <URL of hubot-freddie's incoming webhook>
+```
 
-_Currently under active development._
+This will generate a `rocketchat-registration.yaml` file in the same directory.
 
-#### Future road map
-* synchronizes messages between (occassionally) connected Rocket.Chat servers
-* interoperate with other Chat servers/services supporting Federation: including Slack, Skype, IRC, Asterisk, and more
-* extend video chat, audio chat, and screensharing to users across the federated servers/services network
-* enable control, management, monitoring, communication, and collboration between intelligent devices (things) connected throughout a federated servers/services network; with zero-overhead lightweight junctions to accomodate legacy MQTT islands
+Copy this file to both your Rocket.Chat server and Synapse Home Server.  Note the absolute path(s).
+
+The format of the generated file is somewhat outdated, please add the following line at the top of the Synapse Home Server's copy:
+
+```
+id: "rocketchat"
+```
+
+On your home server, make sure to add an entry in `homeserver.yaml` to point to this file:
+
+```
+app_service_config_files: ["/absolute/path/to/rocketchat-registration.yaml"]
+```
+
+You will also need to configure Freddie for your Rocket.Chat server and Synapse Home sever..
+
+
+#Configuration
+
+You can configure Freddie via environment variables.
+
+#### Configuration Options
+
+Here are all of the options you can specify to configure hubot-freddie.
+
+Note that these options are in addition to the options available with the hubot-rocketchat adpaters.  Please see [hubot-rocketchat  adapter configuration options](https://github.com/RocketChat/hubot-rocketchat#configuration-options) for more information.
+
+Configure via: `export VAR=Value` or add to pm2 etc
+
+Environment Variable | Description
+:---- | :----
+HOMESERVER_URL | the URL where your Home Server is running, as seen by the bot, specify as `http://host:port`  with no trailing slash
+HOMESERVER_DOMAIN | the domain of the Home Server
+HOMESERVER_ROOM_ID | the id of the federated room on the Home Server;  note this **must** be the ID and not the textual name of the room
+ROCKETCHAT_ROOM_ID | the id of the federated room on the Rocket.Chat Server; note this **must** be the ID and not the textual name of the room
+HOMESERVER_SENDER_LOCAL | the local user on the Home Server that will create new users and send messages on behalf of incoming Rocket.Chat messages
+INCOMING_PORT | the port at which this bot will listen to incoming messages from the Home Server
+ROCKETCHAT_USER_PREFIX | the prefix added to the Rocket.Chat user name when messages are sent on his/her behalf to the Home Server
+WRITABLE_CONFIG_PATH |  the absolute path of the directory where the bot's Matrix bridge can find the `rocketchat-registration.yaml` Application Service configuration file, this file **must** be identical to the one registered with the Home Server
+ROOM_MAP | a list of rooms to map, use `ID_ROCKETCHAT=ID_MATRIX,...,...` same as `HOMESERVER_ROOM_ID` `ROCKETCHAT_ROOM_ID`
