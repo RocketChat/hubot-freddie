@@ -20,7 +20,7 @@ NOTE: This project is a work in progress.
 # Installation
 
 ```
-npm install --save hubot-freddie
+npm install --save @rocket.chat/hubot-freddie
 ```
 
 Next, you must edit the `external-scripts.json` file to load Freddie:
