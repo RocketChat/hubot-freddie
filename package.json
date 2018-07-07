@@ -1,5 +1,5 @@
 {
-  "name": "hubot-freddie",
+  "name": "@rocket.chat/hubot-freddie",
   "description": "Rocket.Chat's Hubot for Federation with matrix.org",
   "version": "0.0.7",
   "author": {
